@@ -1,6 +1,4 @@
-[gd_scene load_steps=3 format=2]
-
-[ext_resource path="res://addons/GodotJsonEditor/Scenes/ObjectLayout.tscn" type="PackedScene" id=1]
+[gd_scene load_steps=2 format=2]
 
 [sub_resource type="CSharpScript" id=1]
 resource_name = "CreateFile"
@@ -92,17 +90,10 @@ margin_bottom = 64.0
 align = 1
 valign = 1
 
-[node name="RootObject" parent="M/VB" instance=ExtResource( 1 )]
-anchor_right = 0.0
-anchor_bottom = 0.0
-margin_top = 94.0
-margin_right = 220.0
-margin_bottom = 124.0
-
 [node name="Save" type="Button" parent="M/VB"]
-margin_top = 154.0
+margin_top = 94.0
 margin_right = 100.0
-margin_bottom = 174.0
+margin_bottom = 114.0
 rect_min_size = Vector2( 100, 0 )
 size_flags_horizontal = 2
 
@@ -118,7 +109,7 @@ valign = 1
 visible = false
 margin_left = 10.0
 margin_top = 30.0
-margin_right = 390.0
+margin_right = 1014.0
 margin_bottom = 570.0
 
 [node name="CreateFile" type="FileDialog" parent="M/CreatePanel"]

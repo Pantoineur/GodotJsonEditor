@@ -1,18 +1,17 @@
 [gd_scene load_steps=3 format=2]
 
 [ext_resource path="res://addons/GodotJsonEditor/Dock/ComboType.cs" type="Script" id=1]
-[ext_resource path="res://addons/GodotJsonEditor/Scenes/ObjectLayout.cs" type="Script" id=2]
+[ext_resource path="res://addons/GodotJsonEditor/Scripts/ObjectLayout.cs" type="Script" id=2]
 
-[node name="ObjectLayout" type="MarginContainer"]
+[node name="Root" type="MarginContainer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 custom_constants/margin_right = 5
 custom_constants/margin_top = 5
 custom_constants/margin_left = 5
 custom_constants/margin_bottom = 5
-script = ExtResource( 2 )
 
-[node name="VBProps" type="VBoxContainer" parent="."]
+[node name="ObjectLayout" type="VBoxContainer" parent="."]
 margin_left = 5.0
 margin_top = 5.0
 margin_right = 105.0
@@ -20,8 +19,9 @@ margin_bottom = 595.0
 rect_min_size = Vector2( 100, 0 )
 size_flags_horizontal = 0
 custom_constants/separation = 22
+script = ExtResource( 2 )
 
-[node name="AddProp" type="Button" parent="VBProps"]
+[node name="AddProp" type="Button" parent="ObjectLayout"]
 margin_left = 2.0
 margin_right = 97.0
 margin_bottom = 20.0
@@ -32,7 +32,7 @@ text = "Add Property"
 visible = false
 margin_left = 5.0
 margin_top = 5.0
-margin_right = 395.0
+margin_right = 1019.0
 margin_bottom = 595.0
 
 [node name="AddProp" type="ConfirmationDialog" parent="AddPropP"]

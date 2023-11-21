@@ -17,6 +17,8 @@ public class GodotJsonEditor : EditorPlugin
     Panel createPanel;
     OptionButton validTypes;
 
+    VBoxContainer vb;
+
     Button createBtn;
     Button loadBtn;
     Button validateBtn;
@@ -28,6 +30,7 @@ public class GodotJsonEditor : EditorPlugin
     List<Node> activeNodes = new List<Node>();
     List<DataClassInput> properties = new List<DataClassInput>();
 
+    PackedScene objectLayoutScene;
 
     string filePath;
     string selectedType;
@@ -40,6 +43,12 @@ public class GodotJsonEditor : EditorPlugin
     {
         InitCustomTypes();
         InitUserInterface();
+
+        objectLayoutScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/ObjectLayout.tscn");
+        Node objectLayoutNode = objectLayoutScene.Instance();
+        vb.AddChildBelowNode(filePathLabel, objectLayoutNode);
+
+        rootObject = objectLayoutNode.GetNode<ObjectLayout>("ObjectLayout");
     }
 
     private void InitCustomTypes()
@@ -47,16 +56,16 @@ public class GodotJsonEditor : EditorPlugin
         Texture texture = GD.Load<Texture>("res://icon.png");
 
         Script objectLayoutScript = GD.Load<Script>("res://addons/GodotJsonEditor/Scripts/ObjectLayout.cs");
-        AddCustomType("ObjectLayout", "Margin", objectLayoutScript, texture);
+        AddCustomType(nameof(ObjectLayout), "Margin", objectLayoutScript, texture);
 
         Script intInputScript = GD.Load<Script>("res://addons/GodotJsonEditor/Scripts/IntInput.cs");
-        AddCustomType("IntInput", "Control", intInputScript, texture);
+        AddCustomType(nameof(IntInput), "Control", intInputScript, texture);
 
         Script floatInputScript = GD.Load<Script>("res://addons/GodotJsonEditor/Scripts/FloatInput.cs");
-        AddCustomType("FloatInput", "Control", floatInputScript, texture);
+        AddCustomType(nameof(FloatInput), "Control", floatInputScript, texture);
 
         Script stringInputScript = GD.Load<Script>("res://addons/GodotJsonEditor/Scripts/StringInput.cs");
-        AddCustomType("StringInput", "Control", stringInputScript, texture);
+        AddCustomType(nameof(StringInput), "Control", stringInputScript, texture);
     }
 
     private void InitUserInterface()
@@ -65,6 +74,8 @@ public class GodotJsonEditor : EditorPlugin
         AddControlToDock(DockSlot.RightUl, dock);
 
         filePathLabel = dock.GetNode<Label>(PathToVB + "FilePath");
+
+        vb = dock.GetNode<VBoxContainer>(PathToVB);
 
         createBtn = dock.GetNode<Button>(PathToVB + "HBoxCL/Create");
         createBtn.Connect("pressed", this, "Create");
@@ -90,8 +101,6 @@ public class GodotJsonEditor : EditorPlugin
         validateBtn = dock.GetNode<Button>(PathToVBCreate + "Validate");
         validateBtn.Connect("pressed", this, "ValidateTypePressed");
 
-        rootObject = dock.GetNode<ObjectLayout>(PathToVB + "RootObject");
-
         foreach (Type t in Assembly.GetExecutingAssembly().GetTypes())
         {
             if (t.GetCustomAttribute<DataClassAttribute>() != null)
@@ -100,6 +109,8 @@ public class GodotJsonEditor : EditorPlugin
                 validTypes.AddItem(itemLabel);
             }
         }
+
+        GD.Print("End init");
     }
 
     public void Create()
@@ -224,7 +235,7 @@ public class GodotJsonEditor : EditorPlugin
 
         if(dataObjects == null)
         {
-            GD.PrintErr("Error during json result cast to list !");
+            GD.PrintErr("Error during json result cast");
             return;
         }
 
@@ -253,11 +264,6 @@ public class GodotJsonEditor : EditorPlugin
         System.IO.File.WriteAllText(filePath, json);
     }
 
-    public void AddBtnClicked()
-    {
-
-    }
-
     private void QueueFreeSavedNodes()
     {
         foreach (Node inputNode in properties.ToArray())
@@ -275,10 +281,10 @@ public class GodotJsonEditor : EditorPlugin
 
     public override void _ExitTree()
     {
-        RemoveCustomType("IntInput");
-        RemoveCustomType("FloatInput");
-        RemoveCustomType("StringInput");
-        RemoveCustomType("ObjectLayout");
+        RemoveCustomType(nameof(IntInput));
+        RemoveCustomType(nameof(FloatInput));
+        RemoveCustomType(nameof(StringInput));
+        RemoveCustomType(nameof(ObjectLayout));
         RemoveControlFromDocks(dock);
 
         QueueFreeSavedNodes();

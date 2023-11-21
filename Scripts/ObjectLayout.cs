@@ -1,10 +1,9 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
-public class ObjectLayout : VBoxContainer
+public class ObjectLayout : DataClassInput
 {
-    VBoxContainer vbProps;
-
     Button btnAddProp;
 
     ConfirmationDialog cdAddProp;
@@ -13,19 +12,23 @@ public class ObjectLayout : VBoxContainer
     PackedScene floatInputScene;
     PackedScene stringInputScene;
 
-    public override void _EnterTree()
+    public override void Init(string propName)
     {
         intInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/IntInput.tscn");
         floatInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/FloatInput.tscn");
         stringInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/StringInput.tscn");
 
-        vbProps = GetNode<VBoxContainer>("VBProps");
-
         btnAddProp = GetNode<Button>("VBProps/AddProp");
-        btnAddProp.Connect("pressed", this, "ShowAddPropPanel");
+        btnAddProp.Connect("pressed", this, nameof(ShowAddPropPanel));
 
         cdAddProp = GetNode<ConfirmationDialog>("AddPropP/AddProp");
-        cdAddProp.Connect("confirmed", this, "AddPropDialogConfirmed");
+        cdAddProp.Connect("confirmed", this, nameof(AddPropDialogConfirmed));
+        cdAddProp.Connect("custom_action", this, nameof(TestCa));
+    }
+
+    public void TestCa(string action)
+    {
+        GD.Print($"Custom action is {action}");
     }
 
     public void InstantiateDataInput(DataObject dataObject)
@@ -55,9 +58,9 @@ public class ObjectLayout : VBoxContainer
             inputInstance.SetValue(dataObject.Value);
         }
 
-        activeNodes.Add(inputNode);
-        properties.Add(inputInstance);
-        vBox.AddChild(inputNode);
+        ActiveNodes.Add(inputNode);
+        Properties.Add(inputInstance);
+        AddChild(inputNode);
     }
 
     public void ShowAddPropPanel()
@@ -69,4 +72,7 @@ public class ObjectLayout : VBoxContainer
     {
 
     }
+
+    public List<DataClassInput> Properties { get; set; } = new List<DataClassInput>();
+    public List<Node> ActiveNodes { get; set; } = new List<Node>();
 }
