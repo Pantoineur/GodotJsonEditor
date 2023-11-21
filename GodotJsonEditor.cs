@@ -16,40 +16,38 @@ public class GodotJsonEditor : EditorPlugin
     FileDialog loadFileDialog;
     Panel createPanel;
     OptionButton validTypes;
-    VBoxContainer vBox;
 
     Button createBtn;
     Button loadBtn;
     Button validateBtn;
     Button saveBtn;
+    Button addBtn;
 
-    PackedScene intInputScene;
-    PackedScene floatInputScene;
-    PackedScene stringInputScene;
+    ObjectLayout rootObject;
 
     List<Node> activeNodes = new List<Node>();
     List<DataClassInput> properties = new List<DataClassInput>();
 
+
     string filePath;
     string selectedType;
 
-    const string PathToVB = "Margin/VBoxMain/";
-    const string PathToPanel = "Margin/CreatePanel/";
-    const string PathToVBCreate = "Margin/CreatePanel/Margin/VBCreate/";
+    const string PathToVB = "M/VB/";
+    const string PathToPanel = "M/CreatePanel/";
+    const string PathToVBCreate = "M/CreatePanel/M/VBCreate/";
 
     public override void _EnterTree()
     {
         InitCustomTypes();
         InitUserInterface();
-
-        intInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/IntInput.tscn");
-        floatInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/FloatInput.tscn");
-        stringInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/StringInput.tscn");
     }
 
     private void InitCustomTypes()
     {
         Texture texture = GD.Load<Texture>("res://icon.png");
+
+        Script objectLayoutScript = GD.Load<Script>("res://addons/GodotJsonEditor/Scripts/ObjectLayout.cs");
+        AddCustomType("ObjectLayout", "Margin", objectLayoutScript, texture);
 
         Script intInputScript = GD.Load<Script>("res://addons/GodotJsonEditor/Scripts/IntInput.cs");
         AddCustomType("IntInput", "Control", intInputScript, texture);
@@ -77,8 +75,6 @@ public class GodotJsonEditor : EditorPlugin
         saveBtn = dock.GetNode<Button>(PathToVB + "Save");
         saveBtn.Connect("pressed", this, "Save");
 
-        vBox = dock.GetNode<VBoxContainer>(PathToVB + "VB");
-
         createPanel = dock.GetNode<Panel>(PathToPanel);
 
         createFileDialog = dock.GetNode<FileDialog>(PathToPanel + "CreateFile");
@@ -93,6 +89,8 @@ public class GodotJsonEditor : EditorPlugin
 
         validateBtn = dock.GetNode<Button>(PathToVBCreate + "Validate");
         validateBtn.Connect("pressed", this, "ValidateTypePressed");
+
+        rootObject = dock.GetNode<ObjectLayout>(PathToVB + "RootObject");
 
         foreach (Type t in Assembly.GetExecutingAssembly().GetTypes())
         {
@@ -162,7 +160,7 @@ public class GodotJsonEditor : EditorPlugin
                 case nameof(Int16):
                 case nameof(Int32):
                 case nameof(Int64):
-                    InstantiateDataInput(new DataObject() { DataType = DataType.Int, PropName = prop.Name });
+                    rootObject.InstantiateDataInput(new DataObject() { DataType = DataType.Int, PropName = prop.Name });
                     break;
                 case nameof(UInt16):
                 case nameof(UInt32):
@@ -171,10 +169,10 @@ public class GodotJsonEditor : EditorPlugin
                     break;
                 case nameof(Double):
                 case nameof(Single):
-                    InstantiateDataInput(new DataObject() { DataType = DataType.Float, PropName = prop.Name });
+                    rootObject.InstantiateDataInput(new DataObject() { DataType = DataType.Float, PropName = prop.Name });
                     break;
                 case nameof(String):
-                    InstantiateDataInput(new DataObject() { DataType = DataType.String, PropName = prop.Name });
+                    rootObject.InstantiateDataInput(new DataObject() { DataType = DataType.String, PropName = prop.Name });
                     break;
             }
 
@@ -232,45 +230,13 @@ public class GodotJsonEditor : EditorPlugin
 
         foreach (DataObject dataObject in dataObjects)
         {
-            if (dataObject != null )
+            if (dataObject != null)
             {
-                InstantiateDataInput(dataObject);
+                rootObject.InstantiateDataInput(dataObject);
             }
         }
 
         createPanel.Visible = false;
-    }
-
-    private void InstantiateDataInput(DataObject dataObject)
-    {
-        Node inputNode = null;
-        DataClassInput inputInstance = null;
-        switch ((int)dataObject.DataType)
-        {
-            case (int)DataType.Int:
-                inputNode = intInputScene.Instance();
-                inputInstance = inputNode.GetNode<IntInput>("IntInput");
-                break;
-            case (int)DataType.Float:
-                inputNode = floatInputScene.Instance();
-                inputInstance = inputNode.GetNode<FloatInput>("FloatInput");
-                break;
-            case (int)DataType.String:
-                inputNode = stringInputScene.Instance();
-                inputInstance = inputNode.GetNode<StringInput>("StringInput");
-                break;
-        }
-
-        inputInstance.Init(dataObject.PropName);
-
-        if (dataObject.Value != null)
-        {
-            inputInstance.SetValue(dataObject.Value);
-        }
-
-        activeNodes.Add(inputNode);
-        properties.Add(inputInstance);
-        vBox.AddChild(inputNode);
     }
 
     public void Save()
@@ -285,6 +251,11 @@ public class GodotJsonEditor : EditorPlugin
         string json = JsonConvert.SerializeObject(dataObjects, Formatting.Indented);
 
         System.IO.File.WriteAllText(filePath, json);
+    }
+
+    public void AddBtnClicked()
+    {
+
     }
 
     private void QueueFreeSavedNodes()
@@ -307,6 +278,7 @@ public class GodotJsonEditor : EditorPlugin
         RemoveCustomType("IntInput");
         RemoveCustomType("FloatInput");
         RemoveCustomType("StringInput");
+        RemoveCustomType("ObjectLayout");
         RemoveControlFromDocks(dock);
 
         QueueFreeSavedNodes();
@@ -320,7 +292,8 @@ public enum DataType
     Int,
     Float,
     String,
-    Uint
+    Uint,
+    Object
 }
 
 #endif
