@@ -109,7 +109,7 @@ valign = 1
 visible = false
 margin_left = 10.0
 margin_top = 30.0
-margin_right = 1014.0
+margin_right = 390.0
 margin_bottom = 570.0
 
 [node name="CreateFile" type="FileDialog" parent="M/CreatePanel"]

@@ -9,4 +9,5 @@ public class DataObject
     public string PropName { get; set; }
     public object Value { get; set; }
     public DataType DataType { get; set; }
+    public Type BaseType { get; set; }
 }

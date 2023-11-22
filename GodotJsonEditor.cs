@@ -2,6 +2,7 @@
 using Godot;
 using Newtonsoft.Json;
 using PluginSandbox.addons.GodotJsonEditor;
+using PluginSandbox.addons.GodotJsonEditor.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -49,6 +50,9 @@ public class GodotJsonEditor : EditorPlugin
         vb.AddChildBelowNode(filePathLabel, objectLayoutNode);
 
         rootObject = objectLayoutNode.GetNode<ObjectLayout>("ObjectLayout");
+        rootObject.Init("DAZzefzef");
+
+        rootObject.InstantiateDataInput(new DataObject() { DataType = DataType.String, PropName = "test", Value = "VAVAVA" });
     }
 
     private void InitCustomTypes()
@@ -56,7 +60,7 @@ public class GodotJsonEditor : EditorPlugin
         Texture texture = GD.Load<Texture>("res://icon.png");
 
         Script objectLayoutScript = GD.Load<Script>("res://addons/GodotJsonEditor/Scripts/ObjectLayout.cs");
-        AddCustomType(nameof(ObjectLayout), "Margin", objectLayoutScript, texture);
+        AddCustomType(nameof(ObjectLayout), "Control", objectLayoutScript, texture);
 
         Script intInputScript = GD.Load<Script>("res://addons/GodotJsonEditor/Scripts/IntInput.cs");
         AddCustomType(nameof(IntInput), "Control", intInputScript, texture);
@@ -166,26 +170,7 @@ public class GodotJsonEditor : EditorPlugin
 
         foreach (PropertyInfo prop in assemblyType.GetProperties())
         {
-            switch (prop.PropertyType.Name)
-            {
-                case nameof(Int16):
-                case nameof(Int32):
-                case nameof(Int64):
-                    rootObject.InstantiateDataInput(new DataObject() { DataType = DataType.Int, PropName = prop.Name });
-                    break;
-                case nameof(UInt16):
-                case nameof(UInt32):
-                case nameof(UInt64):
-                    // TODO
-                    break;
-                case nameof(Double):
-                case nameof(Single):
-                    rootObject.InstantiateDataInput(new DataObject() { DataType = DataType.Float, PropName = prop.Name });
-                    break;
-                case nameof(String):
-                    rootObject.InstantiateDataInput(new DataObject() { DataType = DataType.String, PropName = prop.Name });
-                    break;
-            }
+            rootObject.InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, BaseType = prop.PropertyType });
 
             GD.Print($"Found prop : {prop.Name} as {prop.PropertyType.Name}");
         }
@@ -256,7 +241,12 @@ public class GodotJsonEditor : EditorPlugin
         
         foreach(DataClassInput input in properties)
         {
-            dataObjects.Add(new DataObject() { PropName = input.PropName, Value = input.Value, DataType = input.TypeToDataType() });
+            dataObjects.Add(new DataObject() { 
+                PropName = input.PropName, 
+                Value = input.Value,
+                BaseType = input.Value.GetType(),
+                DataType = input.Value.GetType().ToDataType()
+            });
         }
 
         string json = JsonConvert.SerializeObject(dataObjects, Formatting.Indented);
@@ -266,17 +256,7 @@ public class GodotJsonEditor : EditorPlugin
 
     private void QueueFreeSavedNodes()
     {
-        foreach (Node inputNode in properties.ToArray())
-        {
-            inputNode.QueueFree();
-        }
-        foreach (Node node in activeNodes.ToArray())
-        {
-            node.QueueFree();
-        }
-
-        properties.Clear();
-        activeNodes.Clear();
+        rootObject.Clear();
     }
 
     public override void _ExitTree()

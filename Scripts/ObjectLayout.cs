@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
+[Tool]
 public class ObjectLayout : DataClassInput
 {
     Button btnAddProp;
@@ -11,17 +12,26 @@ public class ObjectLayout : DataClassInput
     PackedScene intInputScene;
     PackedScene floatInputScene;
     PackedScene stringInputScene;
+    PackedScene objectLayoutScene;
+
+    VBoxContainer vbProps;
 
     public override void Init(string propName)
     {
+        this.propName = propName;
+        GetNode<Label>("VB/Name").Text = propName;
+
         intInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/IntInput.tscn");
         floatInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/FloatInput.tscn");
         stringInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/StringInput.tscn");
+        objectLayoutScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/ObjectLayout.tscn");
 
-        btnAddProp = GetNode<Button>("VBProps/AddProp");
+        btnAddProp = GetNode<Button>("VB/AddProp");
         btnAddProp.Connect("pressed", this, nameof(ShowAddPropPanel));
 
-        cdAddProp = GetNode<ConfirmationDialog>("AddPropP/AddProp");
+        vbProps = GetNode<VBoxContainer>("VB/VBProps");
+
+        cdAddProp = GetNode<ConfirmationDialog>("../AddPropP/AddProp");
         cdAddProp.Connect("confirmed", this, nameof(AddPropDialogConfirmed));
         cdAddProp.Connect("custom_action", this, nameof(TestCa));
     }
@@ -35,19 +45,23 @@ public class ObjectLayout : DataClassInput
     {
         Node inputNode = null;
         DataClassInput inputInstance = null;
-        switch ((int)dataObject.DataType)
+        switch (dataObject.DataType)
         {
-            case (int)DataType.Int:
+            case DataType.Int:
                 inputNode = intInputScene.Instance();
-                inputInstance = inputNode.GetNode<IntInput>("IntInput");
+                inputInstance = inputNode.GetNode<IntInput>(nameof(IntInput));
                 break;
-            case (int)DataType.Float:
+            case DataType.Float:
                 inputNode = floatInputScene.Instance();
-                inputInstance = inputNode.GetNode<FloatInput>("FloatInput");
+                inputInstance = inputNode.GetNode<FloatInput>(nameof(FloatInput));
                 break;
-            case (int)DataType.String:
+            case DataType.String:
                 inputNode = stringInputScene.Instance();
-                inputInstance = inputNode.GetNode<StringInput>("StringInput");
+                inputInstance = inputNode.GetNode<StringInput>(nameof(StringInput));
+                break;
+            case DataType.Object:
+                inputNode = objectLayoutScene.Instance();
+                inputInstance = inputNode.GetNode<ObjectLayout>(nameof(ObjectLayout));
                 break;
         }
 
@@ -55,12 +69,24 @@ public class ObjectLayout : DataClassInput
 
         if (dataObject.Value != null)
         {
-            inputInstance.SetValue(dataObject.Value);
+            inputInstance.SetValue(dataObject.Value, dataObject.BaseType);
         }
 
         ActiveNodes.Add(inputNode);
         Properties.Add(inputInstance);
-        AddChild(inputNode);
+        vbProps.AddChild(inputNode);
+    }
+
+    public override void SetValue(object value, Type type = null)
+    {
+        base.SetValue(value);
+
+        GD.Print($"object value {value} base type {type}");
+
+        if(value is List<DataClassInput> properties && type != null)
+        {
+
+        }
     }
 
     public void ShowAddPropPanel()
@@ -71,6 +97,22 @@ public class ObjectLayout : DataClassInput
     public void AddPropDialogConfirmed()
     {
 
+    }
+
+    public override void Clear()
+    {
+        foreach (DataClassInput inputNode in Properties.ToArray())
+        {
+            inputNode.Clear();
+            inputNode.QueueFree();
+        }
+        foreach (Node node in ActiveNodes.ToArray())
+        {
+            node.QueueFree();
+        }
+
+        Properties.Clear();
+        ActiveNodes.Clear();
     }
 
     public List<DataClassInput> Properties { get; set; } = new List<DataClassInput>();

@@ -36,31 +36,13 @@ public abstract class DataClassInput : Control
         GetNode<Label>("Name").Text = propName;
     }
 
-    public virtual void SetValue(object value)
+    public virtual void SetValue(object value, Type type = null)
     {
         this.value = value;
     }
 
-    public DataType TypeToDataType()
+    public virtual void Clear()
     {
-        switch(value.GetType().Name)
-        {
-            case nameof(Int16):
-            case nameof(Int32):
-            case nameof(Int64):
-                return DataType.Int;
-            case nameof(UInt16):
-            case nameof(UInt32):
-            case nameof(UInt64):
-                // TODO
-                break;
-            case nameof(Double):
-            case nameof(Single):
-                return DataType.Float;
-            case nameof(String):
-                return DataType.String;
-        }
 
-        return DataType.Int;
     }
 }

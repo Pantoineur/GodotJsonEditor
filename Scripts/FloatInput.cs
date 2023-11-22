@@ -25,7 +25,7 @@ public class FloatInput : DataClassInput
         this.value = value;
     }
 
-    public override void SetValue(object value)
+    public override void SetValue(object value, Type type = null)
     {
         base.SetValue(value);
 

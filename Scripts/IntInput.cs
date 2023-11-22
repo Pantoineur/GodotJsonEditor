@@ -24,7 +24,7 @@ public class IntInput : DataClassInput
         this.value = (int)value;
     }
 
-    public override void SetValue(object value)
+    public override void SetValue(object value, Type type = null)
     {
         base.SetValue(value);
 
