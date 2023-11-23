@@ -18,6 +18,8 @@ public class ObjectLayout : DataClassInput
 
     VBoxContainer vbProps;
 
+    HashSet<string> alreadyParsedTypes = new HashSet<string>();
+
     public override void Init(string propName)
     {
         this.propName = propName;
@@ -68,6 +70,9 @@ public class ObjectLayout : DataClassInput
                 inputInstance = inputNode.GetNode<ObjectLayout>(nameof(ObjectLayout));
                 inputInstance.Init(dataObject.PropName);
 
+                inputInstance.MarginLeft = MarginLeft + 30;
+                inputInstance.MarginRight = MarginRight + 30;
+
                 if(dataObject.BaseType != null && !string.IsNullOrEmpty(dataObject.BaseType.Name))
                 {
                     (inputInstance as ObjectLayout).InstantiateFromType(dataObject.BaseType);
@@ -101,8 +106,14 @@ public class ObjectLayout : DataClassInput
             }
             else
             {
-                GD.Print($"Type => {prop.PropertyType.Name}");
-                InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, BaseType = prop.PropertyType });
+                if(alreadyParsedTypes.Add(prop.PropertyType.Name))
+                {
+                    InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, BaseType = prop.PropertyType });
+                }
+                else
+                {
+                    GD.PrintErr($"Type '{prop.PropertyType.Name}' was already parsed in this hierarchy. Ignoring it to avoid infinite loop.");
+                }
             }            
         }
     }

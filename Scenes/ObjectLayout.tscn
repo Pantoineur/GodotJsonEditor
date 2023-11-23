@@ -6,8 +6,8 @@
 [node name="Root" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
-size_flags_horizontal = 3
-size_flags_vertical = 3
+size_flags_horizontal = 2
+size_flags_vertical = 2
 
 [node name="ObjectLayout" type="Control" parent="."]
 margin_right = 400.0
@@ -31,7 +31,8 @@ margin_top = 34.0
 margin_right = 100.0
 margin_bottom = 34.0
 rect_min_size = Vector2( 100, 0 )
-size_flags_horizontal = 0
+size_flags_horizontal = 3
+size_flags_vertical = 3
 custom_constants/separation = 22
 
 [node name="AddProp" type="Button" parent="ObjectLayout/VB"]
