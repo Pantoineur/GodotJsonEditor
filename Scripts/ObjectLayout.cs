@@ -36,6 +36,8 @@ public class ObjectLayout : DataClassInput
         cdAddProp = GetNode<ConfirmationDialog>("../AddPropP/AddProp");
         cdAddProp.Connect("confirmed", this, nameof(AddPropDialogConfirmed));
         cdAddProp.Connect("custom_action", this, nameof(TestCa));
+
+        IsInit = true;
     }
 
     public void TestCa(string action)
@@ -64,7 +66,7 @@ public class ObjectLayout : DataClassInput
             case DataType.Object:
                 inputNode = objectLayoutScene.Instance();
                 inputInstance = inputNode.GetNode<ObjectLayout>(nameof(ObjectLayout));
-                inputInstance.Init(propName);
+                inputInstance.Init(dataObject.PropName);
 
                 if(dataObject.BaseType != null && !string.IsNullOrEmpty(dataObject.BaseType.Name))
                 {

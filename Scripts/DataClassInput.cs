@@ -30,14 +30,13 @@ public abstract class DataClassInput : Control
         }
     }
 
-    private bool isInit = false;
-    public bool IsInit { get { return isInit; } }
+    public bool IsInit { get; protected set; }
 
     public virtual void Init(string propName)
     {
         this.propName = propName;
         GetNode<Label>("Name").Text = propName;
-        isInit = true;
+        IsInit = true;
     }
 
     public virtual void SetValue(object value, Type type = null)
