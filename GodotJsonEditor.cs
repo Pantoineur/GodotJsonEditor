@@ -50,9 +50,7 @@ public class GodotJsonEditor : EditorPlugin
         vb.AddChildBelowNode(filePathLabel, objectLayoutNode);
 
         rootObject = objectLayoutNode.GetNode<ObjectLayout>("ObjectLayout");
-        rootObject.Init("DAZzefzef");
-
-        rootObject.InstantiateDataInput(new DataObject() { DataType = DataType.String, PropName = "test", Value = "VAVAVA" });
+        rootObject.Init("Root");
     }
 
     private void InitCustomTypes()
@@ -167,13 +165,7 @@ public class GodotJsonEditor : EditorPlugin
             GD.PrintErr("Type not found !");
             return;
         }
-
-        foreach (PropertyInfo prop in assemblyType.GetProperties())
-        {
-            rootObject.InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, BaseType = prop.PropertyType });
-
-            GD.Print($"Found prop : {prop.Name} as {prop.PropertyType.Name}");
-        }
+        rootObject.InstantiateFromType(assemblyType);
 
         createPanel.Visible = false;
     }

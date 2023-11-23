@@ -1,6 +1,8 @@
 using Godot;
+using PluginSandbox.addons.GodotJsonEditor.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 [Tool]
 public class ObjectLayout : DataClassInput
@@ -62,10 +64,20 @@ public class ObjectLayout : DataClassInput
             case DataType.Object:
                 inputNode = objectLayoutScene.Instance();
                 inputInstance = inputNode.GetNode<ObjectLayout>(nameof(ObjectLayout));
+                inputInstance.Init(propName);
+
+                if(dataObject.BaseType != null && !string.IsNullOrEmpty(dataObject.BaseType.Name))
+                {
+                    (inputInstance as ObjectLayout).InstantiateFromType(dataObject.BaseType);
+                }
+
                 break;
         }
 
-        inputInstance.Init(dataObject.PropName);
+        if(!inputInstance.IsInit)
+        {
+            inputInstance.Init(dataObject.PropName);
+        }        
 
         if (dataObject.Value != null)
         {
@@ -75,6 +87,22 @@ public class ObjectLayout : DataClassInput
         ActiveNodes.Add(inputNode);
         Properties.Add(inputInstance);
         vbProps.AddChild(inputNode);
+    }
+
+    public void InstantiateFromType(Type type)
+    {
+        foreach (PropertyInfo prop in type.GetProperties())
+        {
+            if(prop.PropertyType == type)
+            {
+                GD.PrintErr($"Type {type.Name} has a property of its own type. It is ignored for infinite loop reasons.");
+            }
+            else
+            {
+                GD.Print($"Type => {prop.PropertyType.Name}");
+                InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, BaseType = prop.PropertyType });
+            }            
+        }
     }
 
     public override void SetValue(object value, Type type = null)
