@@ -1,8 +1,7 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=3 format=2]
 
 [ext_resource path="res://addons/GodotJsonEditor/Dock/ComboType.cs" type="Script" id=1]
 [ext_resource path="res://addons/GodotJsonEditor/Scripts/ObjectLayout.cs" type="Script" id=2]
-[ext_resource path="res://addons/GodotJsonEditor/Scenes/ObjectLayout.tscn" type="PackedScene" id=3]
 
 [node name="Root" type="Control"]
 anchor_right = 1.0
@@ -20,7 +19,7 @@ margin_bottom = 40.0
 custom_constants/separation = 20
 
 [node name="Name" type="Label" parent="ObjectLayout/VB"]
-margin_right = 114.0
+margin_right = 100.0
 margin_bottom = 14.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -29,24 +28,18 @@ valign = 1
 
 [node name="VBProps" type="VBoxContainer" parent="ObjectLayout/VB"]
 margin_top = 34.0
-margin_right = 114.0
-margin_bottom = 256.0
+margin_right = 100.0
+margin_bottom = 34.0
 rect_min_size = Vector2( 100, 0 )
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_constants/separation = 22
 
-[node name="Root" parent="ObjectLayout/VB/VBProps" instance=ExtResource( 3 )]
-anchor_right = 0.0
-anchor_bottom = 0.0
-margin_right = 114.0
-margin_bottom = 222.0
-
 [node name="AddProp" type="Button" parent="ObjectLayout/VB"]
-margin_left = 9.0
-margin_top = 276.0
-margin_right = 104.0
-margin_bottom = 296.0
+margin_left = 2.0
+margin_top = 54.0
+margin_right = 97.0
+margin_bottom = 74.0
 size_flags_horizontal = 4
 text = "Add Property"
 

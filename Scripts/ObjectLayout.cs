@@ -17,23 +17,23 @@ public class ObjectLayout : DataClassInput
     PackedScene objectLayoutScene;
 
     VBoxContainer vbProps;
-
-    HashSet<string> alreadyParsedTypes = new HashSet<string>();
+    VBoxContainer mainContainer;
 
     public override void Init(string propName)
     {
         this.propName = propName;
-        GetNode<Label>("VB/Name").Text = propName;
+        GetNode<Label>("../VB/Name").Text = propName;
 
         intInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/IntInput.tscn");
         floatInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/FloatInput.tscn");
         stringInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/StringInput.tscn");
         objectLayoutScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/ObjectLayout.tscn");
 
-        btnAddProp = GetNode<Button>("VB/AddProp");
+        btnAddProp = GetNode<Button>("../VB/AddProp");
         btnAddProp.Connect("pressed", this, nameof(ShowAddPropPanel));
 
-        vbProps = GetNode<VBoxContainer>("VB/VBProps");
+        mainContainer = GetNode<VBoxContainer>("../VB");
+        vbProps = GetNode<VBoxContainer>("../VB/VBProps");
 
         cdAddProp = GetNode<ConfirmationDialog>("../AddPropP/AddProp");
         cdAddProp.Connect("confirmed", this, nameof(AddPropDialogConfirmed));
@@ -70,12 +70,15 @@ public class ObjectLayout : DataClassInput
                 inputInstance = inputNode.GetNode<ObjectLayout>(nameof(ObjectLayout));
                 inputInstance.Init(dataObject.PropName);
 
-                inputInstance.MarginLeft = MarginLeft + 30;
-                inputInstance.MarginRight = MarginRight + 30;
-
-                if(dataObject.BaseType != null && !string.IsNullOrEmpty(dataObject.BaseType.Name))
+                if(inputInstance is ObjectLayout asObjectLayout)
                 {
-                    (inputInstance as ObjectLayout).InstantiateFromType(dataObject.BaseType);
+                    asObjectLayout.Level = Level + 1;
+                    asObjectLayout.typeHierarchy = typeHierarchy;
+
+                    if (dataObject.BaseType != null && !string.IsNullOrEmpty(dataObject.BaseType.Name))
+                    {
+                        asObjectLayout.InstantiateFromType(dataObject.BaseType);
+                    }
                 }
 
                 break;
@@ -98,6 +101,10 @@ public class ObjectLayout : DataClassInput
 
     public void InstantiateFromType(Type type)
     {
+        GD.Print($"HERE");
+
+        typeHierarchy.Add(type.Name);
+        GD.Print($"HERE");
         foreach (PropertyInfo prop in type.GetProperties())
         {
             if(prop.PropertyType == type)
@@ -106,16 +113,27 @@ public class ObjectLayout : DataClassInput
             }
             else
             {
-                if(alreadyParsedTypes.Add(prop.PropertyType.Name))
+                if(prop.PropertyType.ToDataType() == DataType.Object)
                 {
-                    InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, BaseType = prop.PropertyType });
+                    GD.Print($"Object => {prop.Name} is {prop.PropertyType.Name}");
+                    if (typeHierarchy.Add(prop.PropertyType.Name))
+                    {
+                        InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, BaseType = prop.PropertyType });
+                    }
+                    else
+                    {
+                        GD.PrintErr($"Type '{prop.PropertyType.Name}' was already parsed in this hierarchy. Ignoring it to avoid infinite loop.");
+                    }
                 }
                 else
                 {
-                    GD.PrintErr($"Type '{prop.PropertyType.Name}' was already parsed in this hierarchy. Ignoring it to avoid infinite loop.");
+                    GD.Print($"Prop => {prop.Name} is {prop.PropertyType.Name}");
+                    InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, BaseType = prop.PropertyType });
                 }
-            }            
+            }
         }
+
+        typeHierarchy.Clear();
     }
 
     public override void SetValue(object value, Type type = null)
@@ -158,4 +176,22 @@ public class ObjectLayout : DataClassInput
 
     public List<DataClassInput> Properties { get; set; } = new List<DataClassInput>();
     public List<Node> ActiveNodes { get; set; } = new List<Node>();
+
+    protected HashSet<string> typeHierarchy = new HashSet<string>();
+    public HashSet<string> TypeHierarchy
+    {
+        get => typeHierarchy;
+        set => typeHierarchy = value;
+    }
+
+    protected int level;
+    public int Level {
+        get => level;
+        set
+        {
+            level = value;
+            mainContainer.MarginLeft = Level * 30;
+            mainContainer.MarginRight = Level * 30;
+        }
+    }
 }
