@@ -73,7 +73,7 @@ public class ObjectLayout : DataClassInput
                 if(inputInstance is ObjectLayout asObjectLayout)
                 {
                     asObjectLayout.Level = Level + 1;
-                    asObjectLayout.typeHierarchy = typeHierarchy;
+                    asObjectLayout.TypeHierarchy = typeHierarchy;
 
                     if (dataObject.BaseType != null && !string.IsNullOrEmpty(dataObject.BaseType.Name))
                     {
@@ -101,10 +101,8 @@ public class ObjectLayout : DataClassInput
 
     public void InstantiateFromType(Type type)
     {
-        GD.Print($"HERE");
-
         typeHierarchy.Add(type.Name);
-        GD.Print($"HERE");
+
         foreach (PropertyInfo prop in type.GetProperties())
         {
             if(prop.PropertyType == type)
@@ -118,6 +116,10 @@ public class ObjectLayout : DataClassInput
                     GD.Print($"Object => {prop.Name} is {prop.PropertyType.Name}");
                     if (typeHierarchy.Add(prop.PropertyType.Name))
                     {
+                        foreach(string name in typeHierarchy)
+                        {
+                            GD.Print(name);
+                        }
                         InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, BaseType = prop.PropertyType });
                     }
                     else
@@ -181,7 +183,7 @@ public class ObjectLayout : DataClassInput
     public HashSet<string> TypeHierarchy
     {
         get => typeHierarchy;
-        set => typeHierarchy = value;
+        set => typeHierarchy = new HashSet<string>(value);
     }
 
     protected int level;
