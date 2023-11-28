@@ -8,6 +8,7 @@ using System.Reflection;
 public class ObjectLayout : DataClassInput
 {
     Button btnAddProp;
+    Button btnExpand;
 
     ConfirmationDialog cdAddProp;
 
@@ -16,28 +17,46 @@ public class ObjectLayout : DataClassInput
     PackedScene stringInputScene;
     PackedScene objectLayoutScene;
 
-    VBoxContainer vbProps;
-    VBoxContainer mainContainer;
+    MarginContainer mProps;
 
+    VBoxContainer vbChildren;
+
+    Control mainContainer;
+
+    Texture iconArrowUp;
+    Texture iconArrowDown;
+
+    bool isExpanded = false;
+
+    const string iconsPath = "res://addons/GodotJsonEditor/Icons";
+    
     public override void Init(string propName)
     {
         this.propName = propName;
-        GetNode<Label>("../VB/Name").Text = propName;
+        GetNode<Label>("../VB/MExp/HB/Name").Text = propName;
 
         intInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/IntInput.tscn");
         floatInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/FloatInput.tscn");
         stringInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/StringInput.tscn");
         objectLayoutScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/ObjectLayout.tscn");
 
-        btnAddProp = GetNode<Button>("../VB/AddProp");
+        btnAddProp = GetNode<Button>("../VB/MProps/VBProps/AddProp");
         btnAddProp.Connect("pressed", this, nameof(ShowAddPropPanel));
 
-        mainContainer = GetNode<VBoxContainer>("../VB");
-        vbProps = GetNode<VBoxContainer>("../VB/VBProps");
+        btnExpand = GetNode<Button>("../VB/MExp/HB/ExpandBtn");
+        btnExpand.Connect("pressed", this, nameof(ToggleExpand));
+
+        mainContainer = GetParent<Control>();
+        vbChildren = GetNode<VBoxContainer>("../VB/MProps/VBProps/Children");
 
         cdAddProp = GetNode<ConfirmationDialog>("../AddPropP/AddProp");
         cdAddProp.Connect("confirmed", this, nameof(AddPropDialogConfirmed));
         cdAddProp.Connect("custom_action", this, nameof(TestCa));
+
+        mProps = GetNode<MarginContainer>("../VB/MProps");
+
+        iconArrowDown = GD.Load<Texture>($"{iconsPath}/down_arrow.png");
+        iconArrowUp = GD.Load<Texture>($"{iconsPath}/up_arrow.png");
 
         IsInit = true;
     }
@@ -45,6 +64,15 @@ public class ObjectLayout : DataClassInput
     public void TestCa(string action)
     {
         GD.Print($"Custom action is {action}");
+    }
+
+    public void ToggleExpand()
+    {
+        isExpanded = !isExpanded;
+
+        mProps.Visible = isExpanded;
+        btnExpand.Icon = isExpanded ? iconArrowDown : iconArrowUp;
+        btnExpand.FocusMode = FocusModeEnum.None;
     }
 
     public void InstantiateDataInput(DataObject dataObject)
@@ -96,7 +124,7 @@ public class ObjectLayout : DataClassInput
 
         ActiveNodes.Add(inputNode);
         Properties.Add(inputInstance);
-        vbProps.AddChild(inputNode);
+        vbChildren.AddChild(inputNode);
     }
 
     public void InstantiateFromType(Type type)
@@ -152,12 +180,12 @@ public class ObjectLayout : DataClassInput
 
     public void ShowAddPropPanel()
     {
-
+        cdAddProp.Popup_();
     }
 
     public void AddPropDialogConfirmed()
     {
-
+        GD.Print("Dialog confirmed");
     }
 
     public override void Clear()
