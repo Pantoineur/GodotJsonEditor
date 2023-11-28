@@ -1,53 +1,81 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://addons/GodotJsonEditor/Dock/ComboType.cs" type="Script" id=1]
 [ext_resource path="res://addons/GodotJsonEditor/Scripts/ObjectLayout.cs" type="Script" id=2]
+[ext_resource path="res://addons/GodotJsonEditor/Icons/fleche-vers-le-bas_16.png" type="Texture" id=3]
 
-[node name="Root" type="VBoxContainer"]
+[node name="Root" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 
-[node name="VB" type="VBoxContainer" parent="."]
-margin_right = 1024.0
-margin_bottom = 74.0
-custom_constants/separation = 20
+[node name="ObjectLayout" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 2 )
 
-[node name="Name" type="Label" parent="VB"]
-margin_right = 1024.0
-margin_bottom = 14.0
+[node name="VB" type="VBoxContainer" parent="."]
+margin_right = 40.0
+margin_bottom = 40.0
+
+[node name="MExp" type="MarginContainer" parent="VB"]
+margin_right = 130.0
+margin_bottom = 22.0
+custom_constants/margin_right = 10
+custom_constants/margin_left = 10
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VB/MExp"]
+margin_left = 10.0
+margin_right = 120.0
+margin_bottom = 22.0
+
+[node name="Name" type="Label" parent="VB/MExp/HBoxContainer"]
+margin_top = 4.0
+margin_bottom = 18.0
 grow_horizontal = 2
 grow_vertical = 2
 align = 1
 valign = 1
 
-[node name="VBProps" type="VBoxContainer" parent="VB"]
-margin_top = 34.0
-margin_right = 1024.0
-margin_bottom = 34.0
+[node name="ExpandBtn" type="Button" parent="VB/MExp/HBoxContainer"]
+margin_left = 4.0
+margin_right = 32.0
+margin_bottom = 22.0
+icon = ExtResource( 3 )
+flat = true
+icon_align = 1
+
+[node name="MProps" type="MarginContainer" parent="VB"]
+margin_top = 26.0
+margin_right = 130.0
+margin_bottom = 50.0
+custom_constants/margin_right = 15
+custom_constants/margin_left = 15
+
+[node name="VBProps" type="VBoxContainer" parent="VB/MProps"]
+margin_left = 15.0
+margin_right = 115.0
+margin_bottom = 24.0
+
+[node name="Children" type="VBoxContainer" parent="VB/MProps/VBProps"]
+margin_right = 100.0
 rect_min_size = Vector2( 100, 0 )
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_constants/separation = 22
 
-[node name="AddProp" type="Button" parent="VB"]
-margin_left = 464.0
-margin_top = 54.0
-margin_right = 559.0
-margin_bottom = 74.0
+[node name="AddProp" type="Button" parent="VB/MProps/VBProps"]
+margin_left = 2.0
+margin_top = 4.0
+margin_right = 97.0
+margin_bottom = 24.0
 size_flags_horizontal = 4
 text = "Add Property"
 
-[node name="ObjectLayout" type="Control" parent="."]
-margin_top = 78.0
-margin_right = 1024.0
-margin_bottom = 78.0
-script = ExtResource( 2 )
-
 [node name="AddPropP" type="Panel" parent="."]
 margin_top = 82.0
-margin_right = 1024.0
+margin_right = 400.0
 margin_bottom = 82.0
 
 [node name="AddProp" type="ConfirmationDialog" parent="AddPropP"]

@@ -55,7 +55,7 @@ public class GodotJsonEditor : EditorPlugin
 
     private void InitCustomTypes()
     {
-        Texture texture = GD.Load<Texture>("res://icon.png");
+        Texture texture = GD.Load<Texture>("res://addons/GodotJsonEditor/Icons/Button.svg");
 
         Script objectLayoutScript = GD.Load<Script>("res://addons/GodotJsonEditor/Scripts/ObjectLayout.cs");
         AddCustomType(nameof(ObjectLayout), "Control", objectLayoutScript, texture);
