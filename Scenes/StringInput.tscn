@@ -15,21 +15,17 @@ margin_left = 30.0
 margin_right = 114.0
 text = "Default Label"
 
-[node name="Spacer" type="Control" parent="StringInput"]
-margin_left = 144.0
-margin_right = 144.0
-margin_bottom = 30.0
-
 [node name="Value" type="LineEdit" parent="StringInput"]
 margin_left = 174.0
 margin_right = 374.0
-margin_bottom = 30.0
+margin_bottom = 26.0
 rect_min_size = Vector2( 200, 0 )
+size_flags_horizontal = 0
 align = 1
 max_length = 40
 expand_to_text_length = true
 clear_button_enabled = true
 placeholder_text = "Value"
-placeholder_alpha = 0.406
+placeholder_alpha = 0.5
 caret_blink = true
 caret_blink_speed = 0.5
