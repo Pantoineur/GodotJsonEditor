@@ -11,6 +11,8 @@ public class ObjectLayout : DataClassInput
     Button btnExpand;
 
     ConfirmationDialog cdAddProp;
+    LineEdit txtNewPropName;
+    OptionButton optNewPropType;
 
     PackedScene intInputScene;
     PackedScene floatInputScene;
@@ -52,6 +54,9 @@ public class ObjectLayout : DataClassInput
         cdAddProp = GetNode<ConfirmationDialog>("../AddPropP/AddProp");
         cdAddProp.Connect("confirmed", this, nameof(AddPropDialogConfirmed));
         cdAddProp.Connect("custom_action", this, nameof(TestCa));
+
+        optNewPropType = cdAddProp.GetNode<OptionButton>("M/VB/OptType");
+        txtNewPropName = cdAddProp.GetNode<LineEdit>("M/VB/EditName");
 
         mProps = GetNode<MarginContainer>("../VB/MProps");
 
@@ -102,6 +107,7 @@ public class ObjectLayout : DataClassInput
                 {
                     asObjectLayout.Level = Level + 1;
                     asObjectLayout.TypeHierarchy = typeHierarchy;
+                    asObjectLayout.FromExistingType = dataObject.FromExistingType;
 
                     if (dataObject.BaseType != null && !string.IsNullOrEmpty(dataObject.BaseType.Name))
                     {
@@ -148,7 +154,7 @@ public class ObjectLayout : DataClassInput
                         {
                             GD.Print(name);
                         }
-                        InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, BaseType = prop.PropertyType });
+                        InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, FromExistingType = true, BaseType = prop.PropertyType });
                     }
                     else
                     {
@@ -185,7 +191,13 @@ public class ObjectLayout : DataClassInput
 
     public void AddPropDialogConfirmed()
     {
-        GD.Print("Dialog confirmed");
+        if(string.IsNullOrEmpty(txtNewPropName.Text))
+        {
+            GD.Print("Unable to add property without a name");
+            return;
+        }
+        GD.Print(optNewPropType.Text);
+        
     }
 
     public override void Clear()
@@ -224,4 +236,6 @@ public class ObjectLayout : DataClassInput
             mainContainer.MarginRight = Level * 30;
         }
     }
+
+    public bool FromExistingType { get; set; }
 }

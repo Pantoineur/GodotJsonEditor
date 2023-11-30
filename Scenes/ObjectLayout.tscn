@@ -60,7 +60,7 @@ placeholder_text = "Name"
 caret_blink = true
 caret_blink_speed = 0.5
 
-[node name="ComboType" type="OptionButton" parent="AddPropP/AddProp/M/VB"]
+[node name="OptType" type="OptionButton" parent="AddPropP/AddProp/M/VB"]
 margin_top = 39.0
 margin_right = 144.0
 margin_bottom = 59.0
