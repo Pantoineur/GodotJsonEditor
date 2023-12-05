@@ -1,11 +1,13 @@
 #if TOOLS
 using Godot;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using PluginSandbox.addons.GodotJsonEditor;
 using PluginSandbox.addons.GodotJsonEditor.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
 
 [Tool]
 public class GodotJsonEditor : EditorPlugin
@@ -62,6 +64,9 @@ public class GodotJsonEditor : EditorPlugin
 
         Script intInputScript = GD.Load<Script>("res://addons/GodotJsonEditor/Scripts/IntInput.cs");
         AddCustomType(nameof(IntInput), "Control", intInputScript, texture);
+
+        Script unsignedIntInputScript = GD.Load<Script>("res://addons/GodotJsonEditor/Scripts/UnsignedIntInput.cs");
+        AddCustomType(nameof(UnsignedIntInput), "Control", unsignedIntInputScript, texture);
 
         Script floatInputScript = GD.Load<Script>("res://addons/GodotJsonEditor/Scripts/FloatInput.cs");
         AddCustomType(nameof(FloatInput), "Control", floatInputScript, texture);
@@ -208,20 +213,17 @@ public class GodotJsonEditor : EditorPlugin
 
         filePathLabel.Text = godotPath;
 
-        List<DataObject> dataObjects = JsonConvert.DeserializeObject<List<DataObject>>(json);
+        DataObject loadedRootObject = JsonConvert.DeserializeObject<DataObject>(json);
 
-        if(dataObjects == null)
+        if (loadedRootObject == null)
         {
-            GD.PrintErr("Error during json result cast");
+            GD.PrintErr($"Error when loading json at path '{godotPath}'");
             return;
         }
 
-        foreach (DataObject dataObject in dataObjects)
+        if (loadedRootObject.Value is JArray asArray)
         {
-            if (dataObject != null)
-            {
-                rootObject.InstantiateDataInput(dataObject);
-            }
+            rootObject.InstantiateFromJson(loadedRootObject.Value as JArray);
         }
 
         createPanel.Visible = false;
@@ -229,19 +231,11 @@ public class GodotJsonEditor : EditorPlugin
 
     public void Save()
     {
-        List<DataObject> dataObjects = new List<DataObject>();
-        
-        foreach(DataClassInput input in properties)
-        {
-            dataObjects.Add(new DataObject() { 
-                PropName = input.PropName, 
-                Value = input.Value,
-                BaseType = input.Value.GetType(),
-                DataType = input.Value.GetType().ToDataType()
-            });
-        }
+        DataObject root = rootObject.PropertiesToDataObject();
 
-        string json = JsonConvert.SerializeObject(dataObjects, Formatting.Indented);
+        string json = JsonConvert.SerializeObject(root, Formatting.Indented);
+
+        GD.Print($"Json = {json}");
 
         System.IO.File.WriteAllText(filePath, json);
     }
@@ -254,6 +248,7 @@ public class GodotJsonEditor : EditorPlugin
     public override void _ExitTree()
     {
         RemoveCustomType(nameof(IntInput));
+        RemoveCustomType(nameof(UnsignedIntInput));
         RemoveCustomType(nameof(FloatInput));
         RemoveCustomType(nameof(StringInput));
         RemoveCustomType(nameof(ObjectLayout));

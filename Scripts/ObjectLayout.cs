@@ -1,8 +1,11 @@
 using Godot;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using PluginSandbox.addons.GodotJsonEditor.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
 
 [Tool]
 public class ObjectLayout : DataClassInput
@@ -15,6 +18,7 @@ public class ObjectLayout : DataClassInput
     OptionButton optNewPropType;
 
     PackedScene intInputScene;
+    PackedScene unsignedIntInputScene;
     PackedScene floatInputScene;
     PackedScene stringInputScene;
     PackedScene objectLayoutScene;
@@ -30,6 +34,8 @@ public class ObjectLayout : DataClassInput
 
     bool isExpanded = false;
 
+    HashSet<string> propNames = new HashSet<string>();
+
     const string iconsPath = "res://addons/GodotJsonEditor/Icons";
     
     public override void Init(string propName)
@@ -38,6 +44,7 @@ public class ObjectLayout : DataClassInput
         GetNode<Label>("../VB/MExp/HB/Name").Text = propName;
 
         intInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/IntInput.tscn");
+        unsignedIntInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/UnsignedIntInput.tscn");
         floatInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/FloatInput.tscn");
         stringInputScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/StringInput.tscn");
         objectLayoutScene = ResourceLoader.Load<PackedScene>("addons/GodotJsonEditor/Scenes/ObjectLayout.tscn");
@@ -80,7 +87,7 @@ public class ObjectLayout : DataClassInput
         btnExpand.FocusMode = FocusModeEnum.None;
     }
 
-    public void InstantiateDataInput(DataObject dataObject)
+    public DataClassInput InstantiateDataInput(DataObject dataObject)
     {
         Node inputNode = null;
         DataClassInput inputInstance = null;
@@ -89,6 +96,10 @@ public class ObjectLayout : DataClassInput
             case DataType.Int:
                 inputNode = intInputScene.Instance();
                 inputInstance = inputNode.GetNode<IntInput>(nameof(IntInput));
+                break;
+            case DataType.Uint:
+                inputNode = unsignedIntInputScene.Instance();
+                inputInstance = inputNode.GetNode<UnsignedIntInput>(nameof(UnsignedIntInput));
                 break;
             case DataType.Float:
                 inputNode = floatInputScene.Instance();
@@ -107,7 +118,6 @@ public class ObjectLayout : DataClassInput
                 {
                     asObjectLayout.Level = Level + 1;
                     asObjectLayout.TypeHierarchy = typeHierarchy;
-                    asObjectLayout.FromExistingType = dataObject.FromExistingType;
 
                     if (dataObject.BaseType != null && !string.IsNullOrEmpty(dataObject.BaseType.Name))
                     {
@@ -123,7 +133,7 @@ public class ObjectLayout : DataClassInput
             inputInstance.Init(dataObject.PropName);
         }        
 
-        if (dataObject.Value != null)
+        if (dataObject.Value != null && dataObject.DataType != DataType.Object)
         {
             inputInstance.SetValue(dataObject.Value, dataObject.BaseType);
         }
@@ -131,6 +141,8 @@ public class ObjectLayout : DataClassInput
         ActiveNodes.Add(inputNode);
         Properties.Add(inputInstance);
         vbChildren.AddChild(inputNode);
+
+        return inputInstance;
     }
 
     public void InstantiateFromType(Type type)
@@ -147,14 +159,13 @@ public class ObjectLayout : DataClassInput
             {
                 if(prop.PropertyType.ToDataType() == DataType.Object)
                 {
-                    GD.Print($"Object => {prop.Name} is {prop.PropertyType.Name}");
                     if (typeHierarchy.Add(prop.PropertyType.Name))
                     {
                         foreach(string name in typeHierarchy)
                         {
                             GD.Print(name);
                         }
-                        InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, FromExistingType = true, BaseType = prop.PropertyType });
+                        InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, BaseType = prop.PropertyType });
                     }
                     else
                     {
@@ -163,13 +174,28 @@ public class ObjectLayout : DataClassInput
                 }
                 else
                 {
-                    GD.Print($"Prop => {prop.Name} is {prop.PropertyType.Name}");
                     InstantiateDataInput(new DataObject() { DataType = prop.PropertyType.ToDataType(), PropName = prop.Name, BaseType = prop.PropertyType });
                 }
             }
         }
 
         typeHierarchy.Clear();
+    }
+
+    public void InstantiateFromJson(JArray propertiesJson)
+    {
+        foreach (JObject dataObject in propertiesJson)
+        {
+            DataObject test = dataObject.ToObject<DataObject>();
+            if (dataObject != null)
+            {
+                DataClassInput instance = InstantiateDataInput(test);
+                if(test.Value is JArray instanceArray && instance is ObjectLayout asObjectLayout)
+                {
+                    asObjectLayout.InstantiateFromJson(instanceArray);
+                }
+            }
+        }
     }
 
     public override void SetValue(object value, Type type = null)
@@ -191,13 +217,42 @@ public class ObjectLayout : DataClassInput
 
     public void AddPropDialogConfirmed()
     {
-        if(string.IsNullOrEmpty(txtNewPropName.Text))
+        string newPropName = txtNewPropName.Text;
+        string newPropTypeName = optNewPropType.Text;
+
+        if (string.IsNullOrEmpty(newPropName))
         {
             GD.Print("Unable to add property without a name");
             return;
         }
-        GD.Print(optNewPropType.Text);
-        
+        if (string.IsNullOrEmpty(newPropTypeName))
+        {
+            GD.Print("Unable to add property without a type");
+            return;
+        }
+
+        if(!propNames.Add(newPropName))
+        {
+            GD.Print($"Property '{newPropName}' already exists");
+            return;
+        }
+
+        if (!Enum.TryParse(newPropTypeName, out DataType dataType))
+        {
+            GD.Print($"Type '{newPropTypeName}' was not found");
+            return;
+        }
+
+        DataObject newProp = new DataObject()
+        {
+            DataType = dataType,
+            PropName = newPropName
+        };
+
+        InstantiateDataInput(newProp);
+
+        txtNewPropName.Clear();
+        optNewPropType.Text = "Type";
     }
 
     public override void Clear()
@@ -214,6 +269,36 @@ public class ObjectLayout : DataClassInput
 
         Properties.Clear();
         ActiveNodes.Clear();
+    }
+
+    public DataObject PropertiesToDataObject()
+    {
+        DataObject dataObject = new DataObject
+        {
+            PropName = PropName,
+            DataType = DataType.Object
+        };
+
+        List<DataObject> children = new List<DataObject>();
+        foreach (DataClassInput input in Properties)
+        {
+            switch (input)
+            {
+                case ObjectLayout asObject:
+                    children.Add(asObject.PropertiesToDataObject());
+                    break;
+                default:
+                    children.Add(new DataObject()
+                    {
+                        PropName = input.PropName,
+                        Value = input.Value
+                    });
+                    break;
+            }
+        }
+
+        dataObject.Value = children;
+        return dataObject;
     }
 
     public List<DataClassInput> Properties { get; set; } = new List<DataClassInput>();
@@ -236,6 +321,4 @@ public class ObjectLayout : DataClassInput
             mainContainer.MarginRight = Level * 30;
         }
     }
-
-    public bool FromExistingType { get; set; }
 }

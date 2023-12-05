@@ -24,5 +24,7 @@ namespace PluginSandbox.addons.GodotJsonEditor
     public class CircularTestClass
     {
         public TestDataClass Test1 { get; set; }
+        public OtherDataClass Test2 { get; set; }
+        public int ValTest { get; set; }
     }
 }
